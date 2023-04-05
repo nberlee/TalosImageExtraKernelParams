@@ -41,5 +41,5 @@ losetup -d "${loop_device}"
 
 # pack the image back into a tar.gz and remove the unpacked disk image
 rm $1
-tar -czf $1 $image_file
+tar -czf $1 $image_file --transform='s,^\./,,'
 rm $image_file
