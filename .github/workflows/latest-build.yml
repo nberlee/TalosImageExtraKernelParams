@@ -1,0 +1,48 @@
+name: Docker image
+on:
+  push:
+    branches:
+      - main
+  pull_request:
+jobs:
+  build:
+    name: Build
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      packages: write
+    steps:
+      -
+        name: Check out code into the Go module directory
+        uses: actions/checkout@v3
+      -
+        name: Set up QEMU
+        uses: docker/setup-qemu-action@v2
+      -
+        name: Set up Docker Buildx
+        id: buildx
+        with:
+          config: .github/buildkitd.toml
+          version: v0.10.0
+        uses: docker/setup-buildx-action@v2
+
+      - name: Login to GitHub Container Registry
+        uses: docker/login-action@v2
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+      -
+        name: Build
+        uses: docker/build-push-action@v3
+        with:
+          context: .
+          tags: |
+            ghcr.io/${{ github.repository_owner }}/talos-image-extra-kernel-params:latest
+            ghcr.io/${{ github.repository_owner }}/talos-image-extra-kernel-params:${{ github.sha }}
+          platforms: linux/amd64,linux/arm64
+          push: true
+          build-args: |
+            REVISION=${{github.sha}}
+          cache-from: type=gha
+          cache-to: type=gha
